@@ -1,83 +1,120 @@
+var express = require('express');
+var path = require('path');
+var favicon = require('serve-favicon');
+var logger = require('morgan');
+var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
+var session = require('express-session');
+var routes = require('./routes/index');
+var order = require('./routes/order');
+var newOrder=require('./routes/newOrder');
+var searchOrder = require('./routes/searchOrder');
+var result = require('./routes/result');
+var searchcustomer = require('./routes/searchCustomer');
+var customer = require('./routes/customer');
+var inventory = require('./routes/inventory');
 
-/**
- * Module dependencies.
- */
-/*引用模块*/
-var express = require('express')
-  , routes = require('./routes')
-  , user = require('./routes/user')
-  , http = require('http')
-  , util=require('util')
-  , path = require('path')
-  ,engine=require('./system');
-/*实例化express对象*/
+
+
 var app = express();
 
-/*配置app的参数和启用中间件*/
-app.configure(function(){
-  app.set('port', process.env.PORT || 3000);
-  //告诉我们的页面模版目录
-  app.set('views', __dirname + '/views');
-  //告诉它我们使用那种模版引擎
-  app.set('view engine', 'ejs');
-  app.use(express.favicon());
-  app.use(express.logger('dev'));
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(app.router);
-  app.use(express.static(path.join(__dirname, 'public')));
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+//app.use(session({secret : 'session'}));
+
+// uncomment after placing your favicon in /public
+//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(logger('dev'));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/', routes);
+app.use('/order', order);
+app.use('/newOrder', newOrder);
+app.use('/searchOrder', searchOrder);
+app.use('/result', result);
+app.use('/searchcustomer',searchcustomer);
+app.use('/customer',customer);
+app.use('/inventory',inventory );
+app.get('/searchOrder/delete/:id', searchOrder);
+app.get('/searchOrder/edit/:id', searchOrder);
+// app.post('/customers/edit/:id',searchOrder);
+
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
 });
 
-//配置开发模式
-app.configure('development', function(){
-  app.use(express.errorHandler());
-});
-//指定路由控制
-app.get('/', routes.index);
-app.get('/pcat', routes.pcat);
-app.get('/user/:username',function(req,res){
-            res.send("user ："+req.params.username);
-        });
+// error handlers
 
-app.get('/users', user.list);
-app.all('/test/:username',function(req,res,next){
-	console.log("all methods is call");
-	//我们在这里验证用户名是否存在。
-	//如果存在直接send或者调用next(new Error('用户已经存在'));
-	//如果不存在我们调用next()把控制权交给下一个路由规则
-	next();
-	res.send('all的路由规则完毕。')
+// development error handler
+// will print stacktrace
+if (app.get('env') === 'development') {
+  app.use(function(err, req, res, next) {
+    res.status(err.status || 500);
+    res.render('error', {
+      message: err.message,
+      error: err
+    });
+  });
+}
+
+// production error handler
+// no stacktraces leaked to user
+app.use(function(err, req, res, next) {
+  res.status(err.status || 500);
+  res.render('error', {
+    message: err.message,
+    error: {}
+  });
 });
- app.get('/test/:username',function(req,res){
-     res.send("user："+req.params.username)
-})
-app.get('/abc',routes.pcat)
-//改造ejs引擎中的方法
-app.engine('ejs', engine);
-//将layout的模版布局模版设置为默认
-app.locals._layoutFile='layout'
-//片段视图
-app.get('/list',function(req,res){
-	res.render('list',{
-		title:'片段视图',
-		items:['marico',1991,'pcat']
-	})
-});
-//视图助手
-app.locals({
-	inspect:function(obj){
-		return util.inspect(obj,true)+"    解析成功";
-	}
-})
-app.get('/view',function(req,res){
-	res.locals({
-		headers:function(req,res){
-			return req.headers;
-		}
-	})
-	res.render('view',{title:"PCAT"});
-})
-//创建服务并监听端口
-http.createServer(app).listen(app.get('port'), function(){
-  console.log("Express server listening on port " + app.get('port'));
-});
+
+// $(document).ready(function(){
+// 	$.ajax({
+// 		url: "http://localhost/chartjs/data.php",
+// 		method: "GET",
+// 		success: function(data) {
+// 			console.log(data);
+// 			var player = [];
+// 			var score = [];
+//
+// 			for(var i in data) {
+// 				player.push("Player " + data[i].playerid);
+// 				score.push(data[i].score);
+// 			}
+//
+// 			var chartdata = {
+// 				labels: player,
+// 				datasets : [
+// 					{
+// 						label: 'Player Score',
+// 						backgroundColor: 'rgba(200, 200, 200, 0.75)',
+//             borderColor: 'rgba(200, 200, 200, 0.75)',
+// 						hoverBackgroundColor: 'rgba(200, 200, 200, 1)',
+// 						hoverBorderColor: 'rgba(200, 200, 200, 1)',
+// 						data: score
+// 					}
+// 				]
+// 			};
+//
+// 			var ctx = $("#mycanvas");
+//
+// 			var barGraph = new Chart(ctx, {
+// 				type: 'bar',
+// 				data: chartdata
+// 			});
+// 		},
+// 		error: function(data) {
+// 			console.log(data);
+// 		}
+// 	});
+// });
+
+
+module.exports = app;
