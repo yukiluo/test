@@ -13,6 +13,23 @@ var result = require('./routes/result');
 var searchcustomer = require('./routes/searchCustomer');
 var customer = require('./routes/customer');
 var inventory = require('./routes/inventory');
+var mysql = require('mysql');
+
+var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "0905889200",
+    database: "test"
+});
+
+con.connect(function(err) {
+    if (err) {
+        console.log('connecting error');
+        return;
+    }
+    console.log('connecting success');
+});
+
 
 
 
@@ -30,6 +47,11 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(function(req, res, next) {
+    req.con = con;
+    next();
+});
 
 app.use('/', routes);
 app.use('/order', order);
